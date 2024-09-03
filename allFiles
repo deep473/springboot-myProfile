@@ -1,0 +1,208 @@
+index.html
+---------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Create profile</title>
+	</head>
+	<body>
+		<h2>Profile creation</h2>
+		<form id="profileForm" action="/create" method="post" 
+						enctype="multipart/form-data">
+		    <input type="text" name="name" placeholder="Name" required />
+		    <br><br>
+		    <input type="email" name="email" placeholder="Email" required />
+		    <br><br>
+		    <input type="date" name="dob" placeholder="Date of Birth" required />
+		    <br><br>
+		    <select name="gender">
+		        <option value="Male">Male</option>
+		        <option value="Female">Female</option>
+		        <option value="Other">Other</option>
+		    </select>
+		    <br><br>
+		    <input type="text" name="city" placeholder="City" required />
+		    <br><br>
+		    <input type="file" name="photo" accept="image/*" />
+		    <br><br>
+		    <button type="submit">Submit</button>
+		</form>
+
+		
+	</body>
+</html>
+
+==============================
+
+profile.html
+-----------------
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Profile Details</h1>
+    <div>
+        <p><strong>Name:</strong> <span th:text="${profile.name}"></span></p>
+        <p><strong>Email:</strong> <span th:text="${profile.email}"></span></p>
+        <p><strong>Date of Birth:</strong> <span th:text="${profile.dob}"></span></p>
+        <p><strong>Gender:</strong> <span th:text="${profile.gender}"></span></p>
+        <p><strong>City:</strong> <span th:text="${profile.city}"></span></p>
+        <p><strong>Photo:</strong></p>
+        <img th:if="${profile.photoBase64}" 
+        th:src="'data:image/jpeg;base64,' + ${profile.photoBase64}" 
+        alt="Profile Photo" />
+        <p th:if="${!profile.photoBase64}">No photo available</p>
+    </div>
+    <a href="/create">Back to Form</a>
+</body>
+</html>
+
+===============================
+
+MyProfileController.java
+--------------------------
+package com.profile.controller;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
+import com.profile.entity.MyProfile;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+@Controller
+public class MyProfileController {
+
+    @PostMapping("/create")
+    public String createProfile(@RequestParam("name") String name,
+                                @RequestParam("email") String email,
+                                @RequestParam("dob") LocalDate dob,
+                                @RequestParam("gender") String gender,
+                                @RequestParam("city") String city,
+                                @RequestParam("photo") MultipartFile photo,
+                                Model model) {
+        
+        MyProfile profile = new MyProfile();
+        profile.setName(name);
+        profile.setEmail(email);
+        profile.setDob(dob);
+        profile.setGender(gender);
+        profile.setCity(city);
+        
+        try {
+            if (!photo.isEmpty()) {
+                profile.setPhoto(photo.getBytes());  // Save photo bytes
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("profile", profile);
+        return "profile";
+    }
+}
+
+=====================
+MyProfile.java
+----------------
+
+package com.profile.entity;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class MyProfile {
+
+	private String name;
+	private String email;
+	private LocalDate dob;
+	private String gender;
+	private String city;
+
+	private byte[] photo;
+	
+	public String getPhotoBase64() {
+        if (photo == null) {
+            return null;
+        }
+        return Base64.getEncoder().encodeToString(photo);
+    }
+
+	public MyProfile(String name, String email, LocalDate dob, String gender, String city, byte[] photo) {
+		super();
+		this.name = name;
+		this.email = email;
+		this.dob = dob;
+		this.gender = gender;
+		this.city = city;
+		this.photo = photo;
+	}
+
+	public MyProfile() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public LocalDate getDob() {
+		return dob;
+	}
+
+	public void setDob(LocalDate dob) {
+		this.dob = dob;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public byte[] getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(byte[] photo) {
+		this.photo = photo;
+	}
+
+	
+	@Override
+	public String toString() {
+		return "MyProfile [name=" + name + ", email=" + email + ", dob=" + dob + ", gender=" + gender + ", city=" + city
+				+ ", photo=" + Arrays.toString(photo) + "]";
+	}  
+	
+	
+}
